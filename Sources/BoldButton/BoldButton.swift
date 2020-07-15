@@ -10,9 +10,6 @@ public class BoldButton: UIControl, Highlatable {
     /// Action performed on button press.
     public var pressHandler: BoldButtonAction?
     
-    /// Dimming style applied to button when it detects press.
-    public var dimmingStyle: DimmingStyle = .alpha(0.5)
-    
     /// Text displayed in button.
     @IBInspectable public var text: String? {
         didSet {
@@ -44,9 +41,35 @@ public class BoldButton: UIControl, Highlatable {
             #endif
         }
     }
-        
+    
+    /// Dimming style applied to button when it detects press.
+    public dynamic var dimmingStyle: DimmingStyle {
+        get {
+            return DimmingStyle(adapter: dimmingStyleAdapter, ratio: dimmingStyleAdapterRatio)
+        } set {
+            dimmingStyleAdapter = newValue.components.adapter
+            dimmingStyleAdapterRatio = newValue.components.ratio
+        }
+    }
+    
+    // MARK: UIAppearance-compatible properties
+    @IBInspectable public dynamic var showsShadowUnderContent = false {
+        didSet {
+            /// Shadow is added/removed in `layoutSubviews()` methods
+            #if TARGET_INTERFACE_BUILDER
+                setNeedsLayout()
+            #else
+                layoutIfNeeded()
+            #endif
+        }
+    }
+    
+    @IBInspectable public dynamic var dimmingStyleAdapter: DimmingStyleAdapter = .alpha
+    
+    @IBInspectable public dynamic var dimmingStyleAdapterRatio: CGFloat = 0.5
+    
     /// Property declaring if tint color in selected state should be light, or dark.
-    @IBInspectable public var style: Style = .light {
+    @IBInspectable public dynamic var style: Style = .light {
         didSet {
             updateColors()
         }
@@ -173,7 +196,13 @@ extension BoldButton {
         super.layoutSubviews()
         updateColors()
         layer.cornerRadius = 10
-        textLabel.dropShadow()
+        if showsShadowUnderContent {
+            textLabel.dropShadow()
+            imageView.dropShadow()
+        } else {
+            textLabel.removeShadow()
+            imageView.removeShadow()
+        }
     }
     
     public override func prepareForInterfaceBuilder() {

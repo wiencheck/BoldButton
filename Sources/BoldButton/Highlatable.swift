@@ -1,19 +1,25 @@
 import UIKit
 
+/// Protocol which makes it easy to add custom appearance for views during interactions.
 public protocol Highlatable: UIView {
+    /// Style of animations used during highlighting.
     var dimmingStyle: DimmingStyle { get }
+    
+    /// Optional view on which animations will be performed, defaults to `self`.
+    /// For example `UITableViewCell` could return its `imageView` here.
     var dimmedView: UIView { get }
 }
 
 extension Highlatable {
     var dimmingStyle: DimmingStyle {
-        return .darken(0.5)
+        return .alpha(0.5)
     }
     
     var dimmedView: UIView {
         return self
     }
     
+    /// Begin custom highlighting animations based on `dimmingStyle` value.
     func highlight(animated: Bool = true) {
         let duration: TimeInterval = animated ? 0.1 : 0
         let dimmingView: DimmingView
@@ -53,6 +59,7 @@ extension Highlatable {
         }
     }
     
+    /// Finish animations and return to initial state.
     func unhighlight(animated: Bool = true) {
         let duration: TimeInterval = animated ? 0.1 : 0
         switch dimmingStyle {
@@ -77,16 +84,58 @@ extension Highlatable {
     }
 }
 
+/// Style used for configuring view's animation upon highlighting.
 public enum DimmingStyle {
+    /// Highlighted view changes its opacity to given value.
     case alpha(CGFloat)
+    
+    /// Highlighted view places a light overlay on top with given opacity.
     case lighten(CGFloat)
+    
+    /// Highlighted view places a dark overlay on top with given opacity.
     case darken(CGFloat)
+    
+    /// Highlighted view changes its size by given multiplier.
     case scale(CGFloat)
+    
+    /// Highlighted view places an overlay colored with a its own `tintColor` on top with given opacity.
     case tint(CGFloat)
 }
 
+internal extension DimmingStyle {
+    init(adapter: DimmingStyleAdapter, ratio: CGFloat) {
+        switch adapter {
+        case .alpha: self = .alpha(ratio)
+        case .lighten: self = .lighten(ratio)
+        case .darken: self = .darken(ratio)
+        case .scale: self = .scale(ratio)
+        case .tint: self = .tint(ratio)
+        }
+    }
+    
+    var components: (adapter: DimmingStyleAdapter, ratio: CGFloat) {
+        switch self {
+        case .alpha(let ratio): return (adapter: .alpha, ratio: ratio)
+        case .lighten(let ratio): return (adapter: .lighten, ratio: ratio)
+        case .darken(let ratio): return (adapter: .darken, ratio: ratio)
+        case .scale(let ratio): return (adapter: .scale, ratio: ratio)
+        case .tint(let ratio): return (adapter: .tint, ratio: ratio)
+        }
+    }
+}
+
+/// Helper enum used to help expose `DimmingStyle` to `UIAppearance` mechanism.
+@objc public enum DimmingStyleAdapter: Int {
+    case alpha
+    case lighten
+    case darken
+    case scale
+    case tint
+}
+
+/// Overlay view used for animations.
 fileprivate class DimmingView: UIView {
-    init(color: UIColor = UIColor.black.withAlphaComponent(0.5)) {
+    init(color: UIColor) {
         super.init(frame: .zero)
         backgroundColor = color
     }
