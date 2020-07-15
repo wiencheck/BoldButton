@@ -9,4 +9,12 @@ extension UIView {
         layer.masksToBounds =  false
         layer.rasterizationScale = scale ? UIScreen.main.scale : 1
     }
+    
+    @objc func removeShadow() {
+        layer.shadowColor = nil
+        layer.shadowOffset = .zero
+        layer.shadowOpacity = 0
+        layer.shadowRadius = 0
+        layer.masksToBounds =  false
+    }
 }
