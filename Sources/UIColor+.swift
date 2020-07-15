@@ -25,4 +25,17 @@ extension UIColor {
     func isDistinct(from color: UIColor) -> Bool {
         return isEqualToColor(color: color, withTolerance: 0.5) == false
     }
+    
+    class var buttonBackground: UIColor {
+        if #available(iOS 13.0, *) {
+            return UIColor { traitCollection in
+                if traitCollection.userInterfaceStyle == .dark {
+                    return UIColor(red: 0.09, green: 0.105, blue: 0.117, alpha: 1)
+                }
+                return .systemGroupedBackground
+            }
+        } else {
+            return .groupTableViewBackground
+        }
+    }
 }

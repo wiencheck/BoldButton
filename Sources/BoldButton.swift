@@ -3,18 +3,18 @@ import UIKit
 public typealias BoldButtonAction = ((BoldButton) -> Void)
 
 @IBDesignable
-public class BoldButton: UIView, Highlatable {
+public class BoldButton: UIControl, Highlatable {
     
-    // MARK: Public stuff
+    // MARK: Public properties
     
     /// Action performed on button press.
     public var pressHandler: BoldButtonAction?
     
     /// Dimming style applied to button when it detects press.
-    public var dimmingStyle: DimmingStyle = .darken(0.3)
+    public var dimmingStyle: DimmingStyle = .alpha(0.5)
     
     /// Text displayed in button.
-    @IBInspectable public var text: String? = "Button" {
+    @IBInspectable public var text: String? {
         didSet {
             textLabel.text = text
             textLabel.isHidden = text == nil || text?.isEmpty == true
@@ -44,39 +44,18 @@ public class BoldButton: UIView, Highlatable {
             #endif
         }
     }
-    
-    /// If `true`, button will be highlighted with `tintColor`
-    @IBInspectable public var isHighlighted = false {
-        didSet {
-            updateColors()
-            #if TARGET_INTERFACE_BUILDER
-                setNeedsLayout()
-            #endif
-        }
-    }
-    
+        
     /// Property declaring if tint color in selected state should be light, or dark.
     @IBInspectable public var style: Style = .light {
         didSet {
             updateColors()
         }
     }
-        
-    /// Value indicating whether button should be enabled.
-    @IBInspectable public var isEnabled = true {
-        didSet {
-            alpha = isEnabled ? 1 : 0.3
-            tap.isEnabled = isEnabled
-            #if TARGET_INTERFACE_BUILDER
-                setNeedsLayout()
-            #endif
-        }
-    }
     
-    // MARK: Private stuff
-    
+    // MARK: Private properties
     @objc private dynamic var backgroundView: UIView = {
         let v = UIView()
+        v.isUserInteractionEnabled = false
         v.translatesAutoresizingMaskIntoConstraints = false
         return v
     }()
@@ -96,6 +75,7 @@ public class BoldButton: UIView, Highlatable {
     
     @objc private dynamic var textLabel: UILabel = {
         let l = UILabel()
+        l.text = "Button"
         l.isHidden = true
         l.textAlignment = .center
         l.isUserInteractionEnabled = false
@@ -119,14 +99,127 @@ public class BoldButton: UIView, Highlatable {
         s.alignment = .center
         s.distribution = .equalCentering
         s.translatesAutoresizingMaskIntoConstraints = false
+        s.isUserInteractionEnabled = false
         return s
     }()
     
-    private lazy var tap: UIGestureRecognizer = {
-        let t = UILongPressGestureRecognizer(target: self, action: #selector(handleGesture(_:)))
-        t.minimumPressDuration = 0
-        return t
-    }()
+    // MARK: Initizalization
+    public override init(frame: CGRect) {
+        super.init(frame: frame)
+        commonInit()
+    }
+    
+    public required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        commonInit()
+    }
+}
+
+// MARK: Setup methods
+private extension BoldButton {
+    func commonInit() {
+        clipsToBounds = true
+        if backgroundColor == nil {
+            backgroundColor = .buttonBackground
+        }
+        addTargets()
+        setupViews()
+    }
+    
+    func setupViews() {
+        addSubview(backgroundView)
+        addSubview(stack)
+        addSubview(indicator)
+        
+        NSLayoutConstraint.activate([
+            backgroundView.topAnchor.constraint(equalTo: topAnchor),
+            backgroundView.leftAnchor.constraint(equalTo: leftAnchor),
+            backgroundView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            backgroundView.rightAnchor.constraint(equalTo: rightAnchor),
+            indicator.centerYAnchor.constraint(equalTo: centerYAnchor),
+            indicator.centerXAnchor.constraint(equalTo: centerXAnchor),
+            stack.centerYAnchor.constraint(equalTo: centerYAnchor),
+            stack.centerXAnchor.constraint(equalTo: centerXAnchor),
+            stack.leftAnchor.constraint(greaterThanOrEqualTo: leftAnchor, constant: 6),
+            stack.topAnchor.constraint(equalTo: topAnchor, constant: 4),
+            imageView.heightAnchor.constraint(equalTo: textLabel.heightAnchor, multiplier: 1),
+            imageView.widthAnchor.constraint(equalTo: imageView.heightAnchor)
+        ])
+    }
+    
+    func addTargets() {
+        addTarget(self, action: #selector(didTouchDownInside(_:)), for: [.touchDown, .touchDownRepeat])
+        addTarget(self, action: #selector(didTouchUpInside), for: [.touchUpInside])
+        addTarget(self, action: #selector(didDragOutside), for: [.touchDragExit, .touchCancel])
+        addTarget(self, action: #selector(didDragInside), for: [.touchDragEnter])
+    }
+    
+    func updateColors() {
+        backgroundView.backgroundColor = isSelected ? tintColor : backgroundColor
+        
+        var tint = isSelected ? style.color : tintColor
+        if let background = backgroundView.backgroundColor, tint?.isEqualToColor(color: background, withTolerance: 0.3) == true {
+            tint = style.other.color
+        }
+        
+        imageView.tintColor = tint
+        textLabel.textColor = tint
+    }
+}
+
+// MARK: Overriden methods
+extension BoldButton {
+    public override func layoutSubviews() {
+        super.layoutSubviews()
+        updateColors()
+        layer.cornerRadius = 10
+        textLabel.dropShadow()
+    }
+    
+    public override func prepareForInterfaceBuilder() {
+        super.prepareForInterfaceBuilder()
+        commonInit()
+    }
+    
+    public override func tintColorDidChange() {
+        super.tintColorDidChange()
+        updateColors()
+    }
+}
+
+// MARK: Overriden properties
+extension BoldButton {
+    public override var isHighlighted: Bool {
+        didSet {
+            #if TARGET_INTERFACE_BUILDER
+                setNeedsLayout()
+            #endif
+        }
+    }
+    
+    public override var isSelected: Bool {
+           didSet {
+            updateColors()
+               #if TARGET_INTERFACE_BUILDER
+                   setNeedsLayout()
+               #endif
+           }
+       }
+    
+    public override var isEnabled: Bool {
+        didSet {
+            alpha = isEnabled ? 1 : 0.3
+            isUserInteractionEnabled = isEnabled
+            #if TARGET_INTERFACE_BUILDER
+                setNeedsLayout()
+            #endif
+        }
+    }
+    
+    public override var intrinsicContentSize: CGSize {
+        let padding: CGFloat = 30
+        return CGSize(width: (textLabel.intrinsicContentSize.width + imageView.intrinsicContentSize.width) + (2 * padding), height: 48)
+    }
     
     /// Color applied to image and text. Overrides `color` value.
     public override var tintColor: UIColor! {
@@ -156,112 +249,26 @@ public class BoldButton: UIView, Highlatable {
             #endif
         }
     }
-    
-    private var isHighlighting = false {
-        didSet {
-            isHighlighting ? highlight() : unhighlight()
-        }
-    }
+}
 
-    @objc private func handleGesture(_ sender: UIGestureRecognizer) {
-        let point = sender.location(in: self)
-        
-        let transform = CGAffineTransform(scaleX: 1.2, y: 1.2).concatenating(CGAffineTransform(translationX: -10, y: -10))
-        let expandedBounds = bounds.applying(transform)
-        let isTouchInside = expandedBounds.contains(point)
-        
-        switch sender.state {
-        case .began:
-            isHighlighting = true
-        case .ended:
-            if isTouchInside {
-                pressHandler?(self)
-            }
-            isHighlighting = false
-        case .changed:
-            if isHighlighting == isTouchInside {
-                return
-            }
-            isHighlighting = isTouchInside
-        default:
-            isHighlighting = false
-        }
-    }
-        
-    public override func layoutSubviews() {
-        super.layoutSubviews()
-        updateColors()
-        layer.cornerRadius = 10
-        textLabel.dropShadow()
+// MARK: Interactions
+private extension BoldButton {
+    @objc func didTouchDownInside(_ sender: Any) {
+        highlight()
     }
     
-    public override init(frame: CGRect) {
-        super.init(frame: frame)
-        commonInit()
+    @objc func didTouchUpInside() {
+        unhighlight()
+        pressHandler?(self)
     }
     
-    public required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        commonInit()
+    @objc func didDragOutside() {
+        unhighlight()
     }
     
-    public override func prepareForInterfaceBuilder() {
-        super.prepareForInterfaceBuilder()
-        commonInit()
+    @objc func didDragInside() {
+        highlight()
     }
-    
-    private func commonInit() {
-        clipsToBounds = true
-        if backgroundColor == nil {
-            if #available(iOS 13.0, *) {
-                backgroundColor = .systemGroupedBackground
-            } else {
-                backgroundColor = .groupTableViewBackground
-            }
-        }
-        addGestureRecognizer(tap)
-        
-        setupViews()
-    }
-    
-    private func setupViews() {
-        addSubview(backgroundView)
-        addSubview(stack)
-        addSubview(indicator)
-        
-        NSLayoutConstraint.activate([
-            backgroundView.topAnchor.constraint(equalTo: topAnchor),
-            backgroundView.leftAnchor.constraint(equalTo: leftAnchor),
-            backgroundView.bottomAnchor.constraint(equalTo: bottomAnchor),
-            backgroundView.rightAnchor.constraint(equalTo: rightAnchor),
-            indicator.centerYAnchor.constraint(equalTo: centerYAnchor),
-            indicator.centerXAnchor.constraint(equalTo: centerXAnchor),
-            stack.centerYAnchor.constraint(equalTo: centerYAnchor),
-            stack.centerXAnchor.constraint(equalTo: centerXAnchor),
-            stack.leftAnchor.constraint(greaterThanOrEqualTo: leftAnchor, constant: 6),
-            stack.topAnchor.constraint(equalTo: topAnchor, constant: 4),
-            imageView.heightAnchor.constraint(equalTo: textLabel.heightAnchor, multiplier: 1),
-            imageView.widthAnchor.constraint(equalTo: imageView.heightAnchor)
-        ])
-    }
-    
-    public override func tintColorDidChange() {
-        super.tintColorDidChange()
-        updateColors()
-    }
-    
-    private func updateColors() {
-        backgroundView.backgroundColor = isHighlighted ? tintColor : backgroundColor
-        
-        var tint = isHighlighted ? style.color : tintColor
-        if let background = backgroundView.backgroundColor, tint?.isEqualToColor(color: background, withTolerance: 0.3) == true {
-            tint = style.other.color
-        }
-        
-        imageView.tintColor = tint
-        textLabel.textColor = tint
-    }
-    
 }
 
 public extension BoldButton {
