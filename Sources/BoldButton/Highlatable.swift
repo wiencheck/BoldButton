@@ -10,7 +10,7 @@ public protocol Highlatable: UIView {
     var dimmedView: UIView { get }
 }
 
-extension Highlatable {
+public extension Highlatable {
     var dimmingStyle: DimmingStyle {
         return .alpha(0.5)
     }
