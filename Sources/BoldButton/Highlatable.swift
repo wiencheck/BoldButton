@@ -137,6 +137,7 @@ internal extension DimmingStyle {
 fileprivate class DimmingView: UIView {
     init(color: UIColor) {
         super.init(frame: .zero)
+        isUserInteractionEnabled = false
         backgroundColor = color
     }
     
