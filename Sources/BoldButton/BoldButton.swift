@@ -1,9 +1,10 @@
 import UIKit
+import Highlighting
 
 public typealias BoldButtonAction = ((BoldButton) -> Void)
 
 @IBDesignable
-public class BoldButton: UIControl, Highlatable {
+public class BoldButton: UIControl, Highlighting {
     
     // MARK: Public properties
     
@@ -43,7 +44,7 @@ public class BoldButton: UIControl, Highlatable {
     }
     
     /// Dimming style applied to button when it detects press.
-    public dynamic var dimmingStyle: DimmingStyle {
+    public var dimmingStyle: DimmingStyle {
         get {
             return DimmingStyle(adapter: dimmingStyleAdapter, ratio: dimmingStyleAdapterRatio)
         } set {
@@ -64,7 +65,7 @@ public class BoldButton: UIControl, Highlatable {
         }
     }
     
-    @IBInspectable public dynamic var dimmingStyleAdapter: DimmingStyleAdapter = .alpha
+    @IBInspectable public dynamic var dimmingStyleAdapter: DimmingStyleAdapter = .contentAlpha
     
     @IBInspectable public dynamic var dimmingStyleAdapterRatio: CGFloat = 0.5
     
@@ -280,8 +281,8 @@ extension BoldButton {
     }
 }
 
-// MARK: Interactions
-private extension BoldButton {
+// MARK: Touch
+public extension BoldButton {
     @objc func didTouchDownInside(_ sender: Any) {
         highlight()
     }
