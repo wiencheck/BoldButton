@@ -1,10 +1,9 @@
 import UIKit
-import Highlighting
 
 public typealias BoldButtonAction = ((BoldButton) -> Void)
 
 @IBDesignable
-public class BoldButton: UIControl, Highlighting {
+public class BoldButton: UIControl {
     
     // MARK: Public properties
     
@@ -331,3 +330,5 @@ extension BoldButton.Style {
         }
     }
 }
+
+extension BoldButton: Highlighting {}
