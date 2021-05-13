@@ -10,6 +10,8 @@ public class BoldButton: UIControl {
     /// Action performed on button press.
     public var pressHandler: BoldButtonAction?
     
+    public var providesHapticFeedback = true
+    
     /// Text displayed in button.
     @IBInspectable public var text: String? {
         didSet {
@@ -126,6 +128,8 @@ public class BoldButton: UIControl {
         return s
     }()
     
+    private lazy var feedbackGenerator = UISelectionFeedbackGenerator()
+    
     // MARK: Initizalization
     public override init(frame: CGRect) {
         super.init(frame: frame)
@@ -147,6 +151,7 @@ private extension BoldButton {
         }
         addTargets()
         setupViews()
+        feedbackGenerator.prepare()
     }
     
     func setupViews() {
@@ -281,13 +286,16 @@ extension BoldButton {
 }
 
 // MARK: Touch
-public extension BoldButton {
+private extension BoldButton {
     @objc func didTouchDownInside(_ sender: Any) {
         highlight()
     }
     
     @objc func didTouchUpInside() {
         unhighlight()
+        if providesHapticFeedback {
+            feedbackGenerator.selectionChanged()
+        }
         pressHandler?(self)
     }
     
