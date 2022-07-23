@@ -8,6 +8,7 @@ public class BoldButton: UIControl {
     // MARK: Public properties
     
     /// Action performed on button press.
+    @available(*, deprecated, message: "Set UIAction for .primaryActionTriggered event.")
     public var pressHandler: BoldButtonAction?
     
     public var providesHapticFeedback = true
@@ -17,9 +18,9 @@ public class BoldButton: UIControl {
         didSet {
             textLabel.text = text
             textLabel.isHidden = text == nil || text?.isEmpty == true
-            #if TARGET_INTERFACE_BUILDER
-                setNeedsLayout()
-            #endif
+#if TARGET_INTERFACE_BUILDER
+            setNeedsLayout()
+#endif
         }
     }
     
@@ -28,9 +29,9 @@ public class BoldButton: UIControl {
         didSet {
             imageView.image = image
             imageView.isHidden = image == nil
-            #if TARGET_INTERFACE_BUILDER
-                setNeedsLayout()
-            #endif
+#if TARGET_INTERFACE_BUILDER
+            setNeedsLayout()
+#endif
         }
     }
     
@@ -38,9 +39,9 @@ public class BoldButton: UIControl {
         didSet {
             stack.isHidden = isLoading
             isLoading ? indicator.startAnimating() : indicator.stopAnimating()
-            #if TARGET_INTERFACE_BUILDER
-                setNeedsLayout()
-            #endif
+#if TARGET_INTERFACE_BUILDER
+            setNeedsLayout()
+#endif
         }
     }
     
@@ -58,11 +59,11 @@ public class BoldButton: UIControl {
     @IBInspectable public dynamic var showsShadowUnderContent = false {
         didSet {
             /// Shadow is added/removed in `layoutSubviews()` methods
-            #if TARGET_INTERFACE_BUILDER
-                setNeedsLayout()
-            #else
-                layoutIfNeeded()
-            #endif
+#if TARGET_INTERFACE_BUILDER
+            setNeedsLayout()
+#else
+            layoutIfNeeded()
+#endif
         }
     }
     
@@ -225,28 +226,28 @@ extension BoldButton {
 extension BoldButton {
     public override var isHighlighted: Bool {
         didSet {
-            #if TARGET_INTERFACE_BUILDER
-                setNeedsLayout()
-            #endif
+#if TARGET_INTERFACE_BUILDER
+            setNeedsLayout()
+#endif
         }
     }
     
     public override var isSelected: Bool {
-           didSet {
+        didSet {
             updateColors()
-               #if TARGET_INTERFACE_BUILDER
-                   setNeedsLayout()
-               #endif
-           }
-       }
+#if TARGET_INTERFACE_BUILDER
+            setNeedsLayout()
+#endif
+        }
+    }
     
     public override var isEnabled: Bool {
         didSet {
             alpha = isEnabled ? 1 : 0.3
             isUserInteractionEnabled = isEnabled
-            #if TARGET_INTERFACE_BUILDER
-                setNeedsLayout()
-            #endif
+#if TARGET_INTERFACE_BUILDER
+            setNeedsLayout()
+#endif
         }
     }
     
@@ -259,18 +260,18 @@ extension BoldButton {
     public override var tintColor: UIColor! {
         didSet {
             updateColors()
-            #if TARGET_INTERFACE_BUILDER
-                setNeedsLayout()
-            #endif
+#if TARGET_INTERFACE_BUILDER
+            setNeedsLayout()
+#endif
         }
     }
     
     public override var backgroundColor: UIColor? {
         didSet {
             updateColors()
-            #if TARGET_INTERFACE_BUILDER
-                setNeedsLayout()
-            #endif
+#if TARGET_INTERFACE_BUILDER
+            setNeedsLayout()
+#endif
         }
     }
     
@@ -278,9 +279,9 @@ extension BoldButton {
     public override var contentMode: UIView.ContentMode {
         didSet {
             imageView.contentMode = contentMode
-            #if TARGET_INTERFACE_BUILDER
-                setNeedsLayout()
-            #endif
+#if TARGET_INTERFACE_BUILDER
+            setNeedsLayout()
+#endif
         }
     }
 }
@@ -296,6 +297,7 @@ private extension BoldButton {
         if providesHapticFeedback {
             feedbackGenerator.selectionChanged()
         }
+        sendActions(for: .primaryActionTriggered)
         pressHandler?(self)
     }
     
